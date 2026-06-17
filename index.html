@@ -54,6 +54,17 @@
   .hero h1{font-size:50px;line-height:1.08;font-weight:700;margin:18px 0 22px;max-width:760px;}
   .hero p.sub{font-size:18.5px;color:var(--ink-soft);max-width:560px;margin:0 0 0;}
 
+  .connect-row{display:flex;align-items:center;gap:16px;margin:30px 0 0;flex-wrap:wrap;}
+  .btn-connect{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:15px;
+    background:var(--accent);color:#fff;border:none;border-radius:10px;
+    padding:13px 22px;cursor:pointer;display:inline-flex;align-items:center;gap:9px;
+  }
+  .btn-connect:hover{opacity:.92;}
+  .btn-connect svg{width:17px;height:17px;flex:none;}
+  .connect-status{font-size:14px;color:var(--ink-soft);}
+  .connect-status.err{color:#C0392B;}
+
   /* pipeline signature element */
   .pipeline{display:flex;align-items:stretch;gap:0;margin:64px 0 8px;}
   .stage{
@@ -122,6 +133,14 @@
   <div class="eyebrow">Publishing pipeline</div>
   <h1>Plan the video once.<br>Decode carries it to TikTok.</h1>
   <p class="sub">Decode is a scheduling and publishing tool for video creators. Connect a TikTok account once, queue up finished content, and Decode publishes it through TikTok's own API — on the schedule you set.</p>
+
+  <div class="connect-row">
+    <button class="btn-connect" onclick="connectTikTok()">
+      <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M16.6 5.82a4.28 4.28 0 0 1-2.96-1.81 4.34 4.34 0 0 1-.78-2.21h-3.2v13.7a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1 0-5.18c.24 0 .47.03.69.08V9.71a5.84 5.84 0 0 0-.69-.04A5.84 5.84 0 0 0 1.25 15.5a5.84 5.84 0 0 0 5.83 5.83 5.84 5.84 0 0 0 5.83-5.83V9.4a7.49 7.49 0 0 0 4.38 1.4V7.59a4.3 4.3 0 0 1-.69-1.77z"/></svg>
+      Connect with TikTok
+    </button>
+    <span id="connectStatus" class="connect-status">Used to record the integration demo for app review.</span>
+  </div>
 
   <div class="pipeline">
     <div class="stage">
@@ -201,11 +220,62 @@
     <div>
       <a href="privacy.html">Privacy Policy</a>
       <a href="terms.html">Terms of Service</a>
-      <a href="mailto:support@giotleroitsao-hash.github.io">Contact</a>
+      <a href="mailto:giotleroi.tsao@gmail.com">Contact</a>
     </div>
     <div class="meta">Decode · Last updated June 16, 2026</div>
   </div>
 </footer>
+
+<script>
+  // --- TikTok Login Kit (OAuth 2.0 + PKCE) -----------------------------
+  // 1. Replace CLIENT_KEY below with the real Client key from
+  //    TikTok Developer Portal → App details → Credentials.
+  // 2. TikTok requires the PKCE code_challenge as a HEX-encoded SHA-256
+  //    digest (not the usual base64url), so it's computed by hand below.
+  const CLIENT_KEY = 'awfbbl5etjjaaqq3';
+  const REDIRECT_URI = 'https://giotleroitsao-hash.github.io/callback.html';
+  const SCOPES = 'user.info.basic,video.upload,video.publish';
+
+  function randomUrlSafeString(byteLength) {
+    const bytes = new Uint8Array(byteLength);
+    crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  async function sha256Hex(plain) {
+    const data = new TextEncoder().encode(plain);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function connectTikTok() {
+    const status = document.getElementById('connectStatus');
+    if (CLIENT_KEY === 'PASTE_YOUR_CLIENT_KEY_HERE') {
+      status.textContent = 'Set CLIENT_KEY in index.html before using this button.';
+      status.classList.add('err');
+      return;
+    }
+    const codeVerifier = randomUrlSafeString(64);
+    const state = randomUrlSafeString(16);
+    const codeChallenge = await sha256Hex(codeVerifier);
+
+    sessionStorage.setItem('decode_code_verifier', codeVerifier);
+    sessionStorage.setItem('decode_state', state);
+
+    const url = 'https://www.tiktok.com/v2/auth/authorize/'
+      + '?client_key=' + encodeURIComponent(CLIENT_KEY)
+      + '&scope=' + encodeURIComponent(SCOPES)
+      + '&response_type=code'
+      + '&redirect_uri=' + encodeURIComponent(REDIRECT_URI)
+      + '&state=' + encodeURIComponent(state)
+      + '&code_challenge=' + codeChallenge
+      + '&code_challenge_method=S256';
+
+    window.location.href = url;
+  }
+</script>
 
 </body>
 </html>
