@@ -199,6 +199,13 @@
       </div>
     </div>
     <div class="scope-row">
+      <code>video.upload</code>
+      <div class="desc">
+        <div class="t">Send a video to TikTok</div>
+        <div class="d">Uploads the queued video to TikTok as a draft, so it can be finished and posted from inside the TikTok app when needed.</div>
+      </div>
+    </div>
+    <div class="scope-row">
       <code>video.publish</code>
       <div class="desc">
         <div class="t">Publish directly</div>
@@ -227,7 +234,7 @@
   //    digest (not the usual base64url), so it's computed by hand below.
   const CLIENT_KEY = 'awfbbl5etjjaaqq3';
   const REDIRECT_URI = 'https://giotleroitsao-hash.github.io/callback.html';
-  const SCOPES = 'user.info.basic,video.publish';
+  const SCOPES = 'user.info.basic,video.upload,video.publish';
 
   function randomUrlSafeString(byteLength) {
     const bytes = new Uint8Array(byteLength);
