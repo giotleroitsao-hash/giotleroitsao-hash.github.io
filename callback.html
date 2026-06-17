@@ -45,12 +45,15 @@
 <script>
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
-  const state = params.get('state');
+  const returnedState = params.get('state');
   const error = params.get('error');
   const errorDesc = params.get('error_description');
   const result = document.getElementById('result');
 
-  function block(label, value, isError){
+  const savedVerifier = sessionStorage.getItem('decode_code_verifier');
+  const savedState = sessionStorage.getItem('decode_state');
+
+  function block(label, value, isError, withCopy){
     const wrap = document.createElement('div');
     const l = document.createElement('div');
     l.className = 'label';
@@ -60,21 +63,32 @@
     v.textContent = value;
     wrap.appendChild(l);
     wrap.appendChild(v);
+    if (withCopy) {
+      const btn = document.createElement('button');
+      btn.textContent = 'Copy';
+      btn.style.marginBottom = '18px';
+      btn.onclick = () => navigator.clipboard.writeText(value);
+      wrap.appendChild(btn);
+    }
     result.appendChild(wrap);
   }
 
   if (error) {
-    block('Error', error + (errorDesc ? ' — ' + errorDesc : ''), true);
+    block('Error', error + (errorDesc ? ' — ' + errorDesc : ''), true, false);
   } else if (code) {
-    block('Authorization code', code, false);
-    if (state) block('State', state, false);
+    block('Authorization code', code, false, true);
 
-    const btn = document.createElement('button');
-    btn.textContent = 'Copy code';
-    btn.onclick = () => navigator.clipboard.writeText(code);
-    result.appendChild(btn);
+    if (savedVerifier) {
+      block('Code verifier (needed to exchange the code for a token)', savedVerifier, false, true);
+    } else {
+      block('Notice', 'No code_verifier found in this browser session — the "Connect" flow must be started from index.html in the same tab.', true, false);
+    }
+
+    if (returnedState && savedState && returnedState !== savedState) {
+      block('Warning', 'The returned state did not match the one this session generated.', true, false);
+    }
   } else {
-    block('Notice', 'No authorization code was found in this URL.', true);
+    block('Notice', 'No authorization code was found in this URL.', true, false);
   }
 </script>
 </body>
